@@ -1,0 +1,56 @@
+{
+  "name": "@flitiq/mcp-server",
+  "version": "0.1.0",
+  "description": "FlitIQ MCP server — FMCSA carrier intelligence tools for Claude. Pro/Team subscribers only.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "fmcsa",
+    "trucking",
+    "freight",
+    "carrier-vetting",
+    "dot-lookup"
+  ],
+  "homepage": "https://flitiq.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smartlinkbasics/flitiq-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/smartlinkbasics/flitiq-mcp/issues",
+    "email": "support@flitiq.com"
+  },
+  "author": "SmartLink Basics, LLC <support@flitiq.com> (https://flitiq.com)",
+  "license": "UNLICENSED",
+  "icon": "assets/icon.png",
+  "private": true,
+  "type": "module",
+  "files": [
+    "dist",
+    "assets",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "flitiq-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "inspector": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@supabase/supabase-js": "^2.45.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

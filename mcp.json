@@ -1,0 +1,38 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schemas/mcp-server.json",
+  "name": "flitiq",
+  "displayName": "FlitIQ — FMCSA Carrier Intelligence",
+  "description": "Look up U.S. motor carriers right inside Claude. Search by name/DOT/MC, check CSA safety scores, see real insurance carrier names + policy detail, review inspections and crashes, and save carriers to your FlitIQ pipeline. Requires a Pro or Team subscription.",
+  "version": "0.1.0",
+  "publisher": {
+    "name": "SmartLink Basics, LLC",
+    "url": "https://flitiq.com",
+    "supportEmail": "support@flitiq.com"
+  },
+  "icon": "assets/icon.png",
+  "homepage": "https://flitiq.com",
+  "repository": "https://github.com/smartlinkbasics/flitiq-mcp",
+  "license": "Proprietary — see LICENSE",
+  "categories": ["business", "data", "logistics"],
+  "tags": ["fmcsa", "trucking", "freight", "carrier", "compliance", "dot"],
+  "requirements": {
+    "subscription": "FlitIQ Pro or Team (https://flitiq.com/pricing)",
+    "auth": "API key from https://flitiq.com/settings"
+  },
+  "runtime": {
+    "command": "npx",
+    "args": ["-y", "@flitiq/mcp-server"],
+    "env": {
+      "FLITIQ_API_KEY": "fliq_live_..."
+    }
+  },
+  "tools": [
+    "flitiq_search_carrier",
+    "flitiq_get_safety",
+    "flitiq_get_insurance",
+    "flitiq_get_inspections",
+    "flitiq_get_crashes",
+    "flitiq_get_authority",
+    "flitiq_save_carrier"
+  ]
+}
