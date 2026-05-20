@@ -1,0 +1,90 @@
+{
+  "manifest_version": "0.3",
+  "name": "flitiq",
+  "display_name": "FlitIQ — FMCSA Carrier Intelligence",
+  "version": "0.1.1",
+  "description": "Look up U.S. motor carriers, check CSA safety scores, verify insurance, and save carriers to your FlitIQ pipeline — all inside Claude. Requires a FlitIQ Pro or Team subscription.",
+  "long_description": "FlitIQ is an FMCSA carrier intelligence tool used by brokers, shippers, and 3PLs to vet motor carriers before they book a load. This MCP plugin gives Claude access to the same data the FlitIQ web and iOS apps use: carrier identity, CSA BASIC scores, real insurance carrier names and policy detail (BIPD primary/excess, cargo, trust), recent inspections, recent crashes, and per-docket operating authority. Pro and Team subscribers can also save carriers to their pipeline directly from a Claude conversation. Per-carrier lookups only — no bulk export or list-all-carriers operation.",
+  "author": {
+    "name": "SmartLink Basics, LLC",
+    "email": "support@flitiq.com",
+    "url": "https://flitiq.com"
+  },
+  "homepage": "https://flitiq.com",
+  "documentation": "https://github.com/alsermeno/flitiq-mcp#readme",
+  "support": "https://github.com/alsermeno/flitiq-mcp/issues",
+  "icon": "assets/icon.png",
+  "screenshots": [],
+  "license": "Proprietary — see LICENSE",
+  "keywords": [
+    "fmcsa",
+    "trucking",
+    "freight",
+    "carrier-vetting",
+    "dot-lookup",
+    "compliance",
+    "logistics"
+  ],
+  "privacy_policies": ["https://flitiq.com/privacy"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alsermeno/flitiq-mcp"
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/index.js"],
+      "env": {
+        "FLITIQ_API_KEY": "${user_config.api_key}"
+      }
+    }
+  },
+  "user_config": {
+    "api_key": {
+      "type": "string",
+      "title": "FlitIQ API Key",
+      "description": "Generate a key at https://flitiq.com/settings/mcp. Requires a Pro or Team subscription.",
+      "sensitive": true,
+      "required": true
+    }
+  },
+  "tools": [
+    {
+      "name": "flitiq_search_carrier",
+      "description": "Search FMCSA carriers by name, DOT, or MC number."
+    },
+    {
+      "name": "flitiq_get_safety",
+      "description": "CSA BASIC scores, OOS rates, safety rating."
+    },
+    {
+      "name": "flitiq_get_insurance",
+      "description": "Active insurance policies — insurer, policy number, coverage, cancel date."
+    },
+    {
+      "name": "flitiq_get_inspections",
+      "description": "Up to 50 most-recent roadside inspections."
+    },
+    {
+      "name": "flitiq_get_crashes",
+      "description": "Up to 50 most-recent FMCSA-reportable crashes."
+    },
+    {
+      "name": "flitiq_get_authority",
+      "description": "Common, contract, and broker authority status per docket."
+    },
+    {
+      "name": "flitiq_save_carrier",
+      "description": "Save a carrier to the user's FlitIQ saved-carriers list."
+    }
+  ],
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=20.0.0"
+    }
+  }
+}

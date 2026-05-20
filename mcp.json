@@ -21,7 +21,7 @@
   },
   "runtime": {
     "command": "npx",
-    "args": ["-y", "@flitiq/mcp-server"],
+    "args": ["-y", "flitiq-mcp"],
     "env": {
       "FLITIQ_API_KEY": "fliq_live_..."
     }

@@ -28,6 +28,16 @@ export interface ToolDef {
   description: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   inputSchema: Record<string, any>;
+  /**
+   * MCP tool annotations — required by the Anthropic MCP directory.
+   * Every tool must declare readOnlyHint OR destructiveHint (mutually exclusive).
+   * `title` is a human-readable label shown in Claude's UI.
+   */
+  annotations: {
+    title: string;
+    readOnlyHint?: boolean;
+    destructiveHint?: boolean;
+  };
   handler: (args: unknown, ctx: AuthContext) => Promise<unknown>;
 }
 
@@ -49,6 +59,7 @@ const searchCarrier: ToolDef = {
   name: "flitiq_search_carrier",
   description:
     "Search FMCSA-registered motor carriers by name, DOT number, or MC number. Returns up to 20 results with identity, location, fleet size, and operating status. Use this when the user mentions a carrier by name and you need to find the right DOT to call other tools.",
+  annotations: { title: "Search carriers", readOnlyHint: true },
   inputSchema: {
     type: "object",
     properties: {
@@ -107,6 +118,7 @@ const getSafetyTool: ToolDef = {
   name: "flitiq_get_safety",
   description:
     "Get the carrier's safety profile: CSA BASIC scores (all 7 categories with percentiles + FMCSA intervention thresholds), out-of-service rates vs national averages, safety rating, total inspections, crash totals. The most important call for vetting.",
+  annotations: { title: "Get carrier safety profile", readOnlyHint: true },
   inputSchema: {
     type: "object",
     properties: {
@@ -146,6 +158,7 @@ const getInsuranceTool: ToolDef = {
   name: "flitiq_get_insurance",
   description:
     "Get the carrier's active and pending insurance policies from FMCSA's L&I database. Returns insurer name (e.g. \"Liberty Mutual Fire Insurance Co.\"), policy number, coverage amount, effective date, and pending cancellation date for BIPD primary, BIPD excess, cargo, and trust-fund coverage. Use this whenever the user asks about insurance verification.",
+  annotations: { title: "Get carrier insurance", readOnlyHint: true },
   inputSchema: {
     type: "object",
     properties: {
@@ -185,6 +198,7 @@ const getInspectionsTool: ToolDef = {
   name: "flitiq_get_inspections",
   description:
     "Get up to 50 most-recent roadside inspections for the carrier. Each row includes date, state, inspection level, OOS counts (vehicle/driver/hazmat), and total violation count. Use this when the user wants to see recent inspection trends or OOS patterns.",
+  annotations: { title: "Get carrier inspections", readOnlyHint: true },
   inputSchema: {
     type: "object",
     properties: {
@@ -211,6 +225,7 @@ const getCrashesTool: ToolDef = {
   name: "flitiq_get_crashes",
   description:
     "Get up to 50 most-recent FMCSA-reportable crashes for the carrier. Each row includes date, state/city, fatality count, injury count, tow-away flag, and hazmat-released flag.",
+  annotations: { title: "Get carrier crashes", readOnlyHint: true },
   inputSchema: {
     type: "object",
     properties: {
@@ -237,6 +252,7 @@ const getAuthorityTool: ToolDef = {
   name: "flitiq_get_authority",
   description:
     "Get the carrier's operating authority status: common, contract, and broker authority per docket (MC number). Surfaces whether each docket is Active, Revoked, Suspended, etc.",
+  annotations: { title: "Get carrier authority", readOnlyHint: true },
   inputSchema: {
     type: "object",
     properties: {
@@ -265,6 +281,7 @@ const saveCarrierTool: ToolDef = {
   name: "flitiq_save_carrier",
   description:
     "Save a carrier to the user's FlitIQ saved-carriers list (with optional note). The user can then view it in the web app, monitor it for alerts, and add it to their CRM pipeline. Mutates account state.",
+  annotations: { title: "Save carrier to pipeline", destructiveHint: true },
   inputSchema: {
     type: "object",
     properties: {
