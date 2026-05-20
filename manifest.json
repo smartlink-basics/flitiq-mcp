@@ -11,8 +11,8 @@
     "url": "https://flitiq.com"
   },
   "homepage": "https://flitiq.com",
-  "documentation": "https://github.com/alsermeno/flitiq-mcp#readme",
-  "support": "https://github.com/alsermeno/flitiq-mcp/issues",
+  "documentation": "https://github.com/smartlink-basics/flitiq-mcp#readme",
+  "support": "https://github.com/smartlink-basics/flitiq-mcp/issues",
   "icon": "assets/icon.png",
   "screenshots": [],
   "license": "Proprietary — see LICENSE",
@@ -28,7 +28,7 @@
   "privacy_policies": ["https://flitiq.com/privacy"],
   "repository": {
     "type": "git",
-    "url": "https://github.com/alsermeno/flitiq-mcp"
+    "url": "https://github.com/smartlink-basics/flitiq-mcp"
   },
   "server": {
     "type": "node",

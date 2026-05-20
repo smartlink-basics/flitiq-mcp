@@ -34,7 +34,7 @@ and proxies to the same FMCSA data sources (SAFER, L&I, SMS) the web and iOS app
   "mcpServers": {
     "flitiq": {
       "command": "npx",
-      "args": ["-y", "github:alsermeno/flitiq-mcp"],
+      "args": ["-y", "github:smartlink-basics/flitiq-mcp"],
       "env": {
         "FLITIQ_API_KEY": "fliq_live_your_key_here"
       }
@@ -110,7 +110,7 @@ contact information, see the full FlitIQ Privacy Policy at
 ## Support
 
 - Email: [support@flitiq.com](mailto:support@flitiq.com)
-- Issues: [github.com/alsermeno/flitiq-mcp/issues](https://github.com/alsermeno/flitiq-mcp/issues)
+- Issues: [github.com/smartlink-basics/flitiq-mcp/issues](https://github.com/smartlink-basics/flitiq-mcp/issues)
 
 ### What this plugin deliberately does NOT do
 
