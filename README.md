@@ -34,7 +34,7 @@ and proxies to the same FMCSA data sources (SAFER, L&I, SMS) the web and iOS app
   "mcpServers": {
     "flitiq": {
       "command": "npx",
-      "args": ["-y", "@flitiq/mcp-server"],
+      "args": ["-y", "github:alsermeno/flitiq-mcp"],
       "env": {
         "FLITIQ_API_KEY": "fliq_live_your_key_here"
       }
