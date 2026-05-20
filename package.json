@@ -21,8 +21,8 @@
     "url": "https://github.com/smartlink-basics/flitiq-mcp/issues",
     "email": "support@flitiq.com"
   },
-  "author": "SmartLink Basics, LLC <support@flitiq.com> (https://flitiq.com)",
-  "license": "UNLICENSED",
+  "author": "SmartLink Basics, LLC <support@flitiq.com> (https://github.com/smartlink-basics)",
+  "license": "MIT",
   "icon": "assets/icon.png",
   "type": "module",
   "files": [

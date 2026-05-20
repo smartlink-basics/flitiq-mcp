@@ -8,14 +8,14 @@
   "author": {
     "name": "SmartLink Basics, LLC",
     "email": "support@flitiq.com",
-    "url": "https://flitiq.com"
+    "url": "https://github.com/smartlink-basics"
   },
   "homepage": "https://flitiq.com",
   "documentation": "https://github.com/smartlink-basics/flitiq-mcp#readme",
   "support": "https://github.com/smartlink-basics/flitiq-mcp/issues",
   "icon": "assets/icon.png",
   "screenshots": [],
-  "license": "Proprietary — see LICENSE",
+  "license": "MIT",
   "keywords": [
     "fmcsa",
     "trucking",
