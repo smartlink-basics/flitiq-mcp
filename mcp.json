@@ -11,7 +11,7 @@
   },
   "icon": "assets/icon.png",
   "homepage": "https://flitiq.com",
-  "repository": "https://github.com/smartlinkbasics/flitiq-mcp",
+  "repository": "https://github.com/smartlink-basics/flitiq-mcp",
   "license": "Proprietary — see LICENSE",
   "categories": ["business", "data", "logistics"],
   "tags": ["fmcsa", "trucking", "freight", "carrier", "compliance", "dot"],

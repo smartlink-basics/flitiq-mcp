@@ -15,16 +15,15 @@
   "homepage": "https://flitiq.com",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/smartlinkbasics/flitiq-mcp.git"
+    "url": "git+https://github.com/smartlink-basics/flitiq-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/smartlinkbasics/flitiq-mcp/issues",
+    "url": "https://github.com/smartlink-basics/flitiq-mcp/issues",
     "email": "support@flitiq.com"
   },
   "author": "SmartLink Basics, LLC <support@flitiq.com> (https://flitiq.com)",
   "license": "UNLICENSED",
   "icon": "assets/icon.png",
-  "private": true,
   "type": "module",
   "files": [
     "dist",
@@ -36,10 +35,11 @@
     "flitiq-mcp": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/index.js",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
     "inspector": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "dependencies": {
