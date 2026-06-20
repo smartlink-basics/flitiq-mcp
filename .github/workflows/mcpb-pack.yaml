@@ -77,6 +77,30 @@ jobs:
           mcpb pack . "flitiq-mcp-${PKG_VER}.mcpb"
           ls -la *.mcpb
 
+      - name: Extract release notes from CHANGELOG.md
+        # Pulls the section between "## [X.Y.Z]" and the next "## ["
+        # header. If no matching section exists (forgot to update the
+        # changelog), falls back to a generic message instead of failing
+        # the build -- shipping a release with stale notes is better than
+        # blocking it.
+        if: startsWith(github.ref, 'refs/tags/flitiq-mcp-')
+        run: |
+          PKG_VER=$(node -p "require('./package.json').version")
+          NOTES=$(awk -v ver="$PKG_VER" '
+            $0 ~ "^## \\[" ver "\\]" { found=1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md | sed -e '/^$/N;/^\n$/D')
+          if [ -z "$NOTES" ]; then
+            NOTES="Release ${PKG_VER}. See commit history for changes (no CHANGELOG entry found)."
+          fi
+          # Persist for the next step. Heredoc syntax preserves newlines.
+          {
+            echo "RELEASE_NOTES<<MCPB_NOTES_EOF"
+            echo "$NOTES"
+            echo "MCPB_NOTES_EOF"
+          } >> "$GITHUB_ENV"
+
       - name: Upload to GitHub Release
         # Only runs on tag pushes -- manual dispatches just produce the
         # .mcpb as a workflow artifact via the previous step (use Actions
@@ -90,7 +114,7 @@ jobs:
           if ! gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
             gh release create "${GITHUB_REF_NAME}" \
               --title "FlitIQ MCP ${PKG_VER}" \
-              --notes "See CHANGELOG / commit history for changes."
+              --notes "${RELEASE_NOTES}"
           fi
           gh release upload "${GITHUB_REF_NAME}" "flitiq-mcp-${PKG_VER}.mcpb" --clobber
 
