@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 /**
- * FlitIQ MCP server — stdio transport.
+ * FlitIQ MCP server -- stdio transport.
  *
- * Claude Desktop launches this as a subprocess when a user adds the plugin to
- * their claude_desktop_config.json. The API key is passed via the FLITIQ_API_KEY
- * env var (configured by the user in their Claude config).
+ * Claude Desktop launches this as a subprocess when a user installs the
+ * .mcpb. The plaintext FlitIQ API key is passed via the FLITIQ_API_KEY
+ * env var (configured by the user once at install time). That is the
+ * ONLY env var this binary reads. No Supabase service-role key, no VPS
+ * token, no database URL -- all of that is server-side behind
+ * /api/mcp/* on flitiq.com, where the API key is validated, the Pro
+ * tier is enforced, and the 60/min rate limit is counted.
  *
- * On startup we:
- *   1. Validate the API key against Supabase (mcp_api_keys table)
- *   2. Confirm the user has a Pro or Team subscription
- *   3. Register the tool catalog and start serving over stdio
- *
- * If auth fails at startup, we still start the server but every tool call
- * returns an UNAUTHENTICATED error with instructions. This is friendlier
- * than crashing — the user sees the actual reason in Claude.
+ * Per the Anthropic MCP directory review, distributing a server-role
+ * Supabase key inside a user-installed binary would have bypassed RLS
+ * and given every Pro subscriber full database access -- so the entire
+ * data layer was moved server-side in v0.1.3.
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -23,25 +23,35 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import { authenticate, type AuthContext } from "./lib/auth.js";
+import { readApiKeyFromEnv, type AuthContext } from "./lib/auth.js";
 import { McpError } from "./lib/errors.js";
 import { TOOLS, findTool } from "./tools.js";
 
 const SERVER_NAME = "flitiq";
-const SERVER_VERSION = "0.1.0";
+const SERVER_VERSION = "0.1.3";
 
 // Cache the resolved auth context for the lifetime of the process. Claude
 // launches one MCP subprocess per session, so we resolve once and reuse.
-// If resolution fails we cache the error and surface it on every tool call.
+//
+// We cache *definite* failures (bad/missing key, expired Pro subscription)
+// permanently so we don't spam the server with retries. Anything else --
+// a transient network blip, a 5xx, a generic Error -- clears the cached
+// context so the next tool call can retry. Without this, a single network
+// hiccup at startup would lock the session into an error state until the
+// user restarts Claude. (Per Anthropic MCP directory review.)
+const TERMINAL_AUTH_CODES = new Set(["UNAUTHENTICATED", "FORBIDDEN_NOT_PRO"]);
+
 let authPromise: Promise<AuthContext> | null = null;
 let authError: McpError | null = null;
 
 async function getAuth(): Promise<AuthContext> {
   if (authError) throw authError;
   if (!authPromise) {
-    authPromise = authenticate(process.env.FLITIQ_API_KEY).catch((err) => {
-      if (err instanceof McpError) {
+    authPromise = Promise.resolve().then(readApiKeyFromEnv).catch((err) => {
+      if (err instanceof McpError && TERMINAL_AUTH_CODES.has(err.code)) {
         authError = err;
+      } else {
+        authPromise = null;
       }
       throw err;
     });
@@ -98,7 +108,7 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
 async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  // stderr — visible to the user when running via Claude Desktop's logs
+  // stderr -- visible to the user when running via Claude Desktop's logs
   console.error(`[flitiq-mcp] v${SERVER_VERSION} ready on stdio`);
 }
 

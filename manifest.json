@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "flitiq",
   "display_name": "FlitIQ — FMCSA Carrier Intelligence",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "Look up U.S. motor carriers, check CSA safety scores, verify insurance, and save carriers to your FlitIQ pipeline — all inside Claude. Requires a FlitIQ Pro or Team subscription.",
   "long_description": "FlitIQ is an FMCSA carrier intelligence tool used by brokers, shippers, and 3PLs to vet motor carriers before they book a load. This MCP plugin gives Claude access to the same data the FlitIQ web and iOS apps use: carrier identity, CSA BASIC scores, real insurance carrier names and policy detail (BIPD primary/excess, cargo, trust), recent inspections, recent crashes, and per-docket operating authority. Pro and Team subscribers can also save carriers to their pipeline directly from a Claude conversation. Per-carrier lookups only — no bulk export or list-all-carriers operation.",
   "author": {
