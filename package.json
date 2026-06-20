@@ -1,6 +1,6 @@
 {
   "name": "flitiq-mcp",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "FlitIQ MCP server — FMCSA carrier intelligence tools for Claude. Pro/Team subscribers only.",
   "keywords": [
     "mcp",

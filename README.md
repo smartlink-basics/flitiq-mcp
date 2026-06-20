@@ -56,9 +56,12 @@ and proxies to the same FMCSA data sources (SAFER, L&I, SMS) the web and iOS app
 | `flitiq_get_crashes` | Up to 50 most-recent crashes with fatality and injury counts. | Pro / Team |
 | `flitiq_get_authority` | Common, contract, and broker authority status per docket. | Pro / Team |
 | `flitiq_save_carrier` | Add a carrier to the user's saved list with an optional note. | Pro / Team |
+| `flitiq_check_connection` | Diagnostic — verify the API key wired through correctly and the server is reachable. Returns a safe summary (last 4 of key + key length, never the full key). | Pro / Team |
 
 Every read tool is annotated `readOnlyHint: true`; `flitiq_save_carrier` is annotated
 `destructiveHint: true` because it writes a row to the user's saved-carriers list.
+All seven tools also declare `openWorldHint: true` because every call contacts the
+FlitIQ API (which itself proxies FMCSA upstream).
 
 ## Examples
 
@@ -90,11 +93,26 @@ Every read tool is annotated `readOnlyHint: true`; `flitiq_save_carrier` is anno
 - Returns `saved_carrier_id`, `already_saved: false`, and a link to view it on the FlitIQ web app
 - If the carrier is already saved, returns `already_saved: true` with the existing record (idempotent)
 
+## How it works
+
+This MCP server is a thin client. Every tool call becomes a `GET` or `POST`
+to `https://flitiq.com/api/mcp/...` with `Authorization: Bearer <your key>`,
+and the FlitIQ web app does the actual Supabase + FMCSA work server-side.
+
+The only environment variable the binary reads is `FLITIQ_API_KEY`
+(plus an optional `FLITIQ_API_BASE` override for staging, which production
+users should never set). No database URL, no service-role key, no VPS
+token ever lives on the user's machine — those would be a security
+liability on a user-distributed plugin.
+
+The per-key rate limit (60 requests/minute) is enforced server-side, so
+it applies across every Claude conversation you run, not per subprocess.
+
 ## Privacy Policy
 
-This MCP server sends API requests to FlitIQ's VPS to look up FMCSA carrier records.
-No carrier data is retained by Claude or by this MCP package — every response is
-served directly from FlitIQ to your local Claude session.
+This MCP server sends API requests to flitiq.com to look up FMCSA carrier
+records. No carrier data is retained by Claude or by this MCP package —
+every response is served directly from FlitIQ to your local Claude session.
 
 **Data collected by FlitIQ when you use this plugin:**
 - Your FlitIQ user ID (resolved from the API key)
@@ -106,6 +124,27 @@ served directly from FlitIQ to your local Claude session.
 For complete data handling, retention, third-party sharing, CCPA/GDPR rights, and
 contact information, see the full FlitIQ Privacy Policy at
 [https://flitiq.com/privacy](https://flitiq.com/privacy).
+
+## Releases
+
+Releases are published as `.mcpb` assets on GitHub Releases using the tag
+convention `flitiq-mcp-X.Y.Z`. Anthropic's MCP directory subscribes to that
+tag pattern, so new versions flow into the directory on the next twice-weekly
+review cycle without a manual resubmission.
+
+To cut a release:
+
+```bash
+# bump version in package.json, manifest.json, src/index.ts (SERVER_VERSION)
+git commit -am "vX.Y.Z: <summary>"
+git push
+git tag flitiq-mcp-X.Y.Z
+git push --tags
+```
+
+The [`mcpb-pack.yaml`](.github/workflows/mcpb-pack.yaml) workflow then packs
+the bundle, attaches `flitiq-mcp-X.Y.Z.mcpb` to a GitHub Release, and
+Anthropic picks it up from there.
 
 ## Support
 
@@ -125,15 +164,18 @@ prohibits bulk extraction of FMCSA data through any FlitIQ surface.
 ## Development
 
 ```bash
-cp .env.example .env.local   # fill in Supabase + VPS creds
+export FLITIQ_API_KEY=fliq_live_your_dev_key   # generate at flitiq.com/settings
 npm install
-npm run dev                  # tsc --watch
-npm run inspector            # smoke-test with MCP Inspector
+npm run dev                                    # tsc --watch
+npm run inspector                              # smoke-test with MCP Inspector
 ```
+
+To point at a staging API instead of production, also set
+`FLITIQ_API_BASE=https://staging.flitiq.com` (no trailing slash).
 
 ## Data sources
 
-The MCP server proxies through the FlitIQ VPS, which aggregates:
+The MCP server calls the FlitIQ API, which proxies the FlitIQ VPS, which aggregates:
 
 - FMCSA SAFER Company Snapshot (identity, address, fleet size, MCS-150)
 - Licensing & Insurance (L&I) database via Socrata dataset `qh9u-swkp`

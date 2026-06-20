@@ -28,7 +28,7 @@ import { McpError } from "./lib/errors.js";
 import { TOOLS, findTool } from "./tools.js";
 
 const SERVER_NAME = "flitiq";
-const SERVER_VERSION = "0.1.3";
+const SERVER_VERSION = "0.1.4";
 
 // Cache the resolved auth context for the lifetime of the process. Claude
 // launches one MCP subprocess per session, so we resolve once and reuse.

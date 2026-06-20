@@ -21,7 +21,11 @@ import {
   getCrashes,
   getAuthority,
   saveCarrier,
+  whoami,
 } from "./lib/api.js";
+
+const SERVER_VERSION = "0.1.4";
+const API_BASE = (process.env.FLITIQ_API_BASE ?? "https://flitiq.com").replace(/\/+$/, "");
 
 /** Stable type the MCP server uses to register every tool. */
 export interface ToolDef {
@@ -299,6 +303,71 @@ const saveCarrierTool: ToolDef = {
   },
 };
 
+/* ─── 8. check_connection (diagnostic) ───────────────────────────── */
+
+/**
+ * Per the MCPB setup guide -- a small diagnostic that returns local
+ * env info + a server round-trip result. Catches the failure mode
+ * static audits can't see: Claude Desktop passing `${user_config.api_key}`
+ * through literally instead of substituting the user's actual key. If
+ * the key starts with "${" we know substitution didn't happen.
+ *
+ * Never returns the full key -- only the last 4 chars and length.
+ */
+const checkConnectionTool: ToolDef = {
+  name: "flitiq_check_connection",
+  description:
+    "Diagnostic: verify the FLITIQ_API_KEY is wired through correctly and the FlitIQ server is reachable. Returns a safe summary (key prefix only, never the full key), the server's view of the account (role + key creation date), and the round-trip status. Run this first if any other tool returns UNAUTHENTICATED or fails unexpectedly.",
+  annotations: { title: "Check FlitIQ connection", readOnlyHint: true, openWorldHint: true },
+  inputSchema: {
+    type: "object",
+    properties: {},
+    additionalProperties: false,
+  },
+  async handler(_args, ctx) {
+    const key = ctx.apiKey;
+    const last4 = key.slice(-4);
+    const looksLikePlaceholder = key.startsWith("${") || key.includes("user_config");
+
+    // Always-safe local section -- works even if the server is unreachable.
+    const local = {
+      api_key_preview: `****${last4}`,
+      api_key_length: key.length,
+      api_key_looks_substituted: !looksLikePlaceholder,
+      api_base: API_BASE,
+      server_version: SERVER_VERSION,
+      node_version: process.version,
+      pid: process.pid,
+      platform: process.platform,
+    };
+
+    // Hit /api/mcp/whoami to confirm the full wire works end-to-end.
+    // Distinguish "key is bad" from "server is down" so users can act.
+    try {
+      const remote = await whoami(key);
+      return {
+        ok: true,
+        round_trip: "ok",
+        local,
+        remote,
+        message:
+          "FLITIQ_API_KEY is valid, account is Pro, and the FlitIQ server responded successfully.",
+      };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return {
+        ok: false,
+        round_trip: "failed",
+        local,
+        error: msg,
+        hint: looksLikePlaceholder
+          ? "Your API key looks like the literal placeholder text '${user_config.api_key}' -- Claude Desktop did not substitute it. Reinstall the .mcpb and re-enter your key in Settings > Extensions."
+          : "Server round-trip failed. The local section above shows what the binary sees; the error above shows what the server (or network) said.",
+      };
+    }
+  },
+};
+
 /* ─── Registry ───────────────────────────────────────────────────── */
 
 export const TOOLS: ToolDef[] = [
@@ -309,6 +378,7 @@ export const TOOLS: ToolDef[] = [
   getCrashesTool,
   getAuthorityTool,
   saveCarrierTool,
+  checkConnectionTool,
 ];
 
 export function findTool(name: string): ToolDef | undefined {

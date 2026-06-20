@@ -135,6 +135,18 @@ export function getAuthority(apiKey: string, dot: string): Promise<Record<string
   return request(`/carrier/${encodeURIComponent(dot)}/authority`, apiKey);
 }
 
+export interface WhoamiResult {
+  role: string;
+  key_prefix: string | null;
+  key_created_at: string | null;
+  rate_limit_per_minute: number;
+  server_time: string;
+}
+
+export function whoami(apiKey: string): Promise<WhoamiResult> {
+  return request<WhoamiResult>("/whoami", apiKey);
+}
+
 export interface SaveCarrierResult {
   already_saved: boolean;
   saved_carrier_id: string;

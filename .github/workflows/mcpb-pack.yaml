@@ -1,0 +1,103 @@
+name: Pack and publish .mcpb
+
+# Triggered by tags matching the convention Anthropic's MCP directory subscribes to.
+# Convention follows the MCPB setup guide: <ServerName>-<SemVer>.
+#
+# To cut a release:
+#   1. Bump version in package.json + manifest.json + src/index.ts SERVER_VERSION
+#   2. git commit + push
+#   3. git tag flitiq-mcp-X.Y.Z && git push --tags
+# This workflow then packs the bundle, attaches flitiq-mcp-X.Y.Z.mcpb to a
+# GitHub Release, and Anthropic's twice-weekly review cycle picks it up.
+#
+# Manual dispatch is also supported for testing the pack step without
+# cutting a release.
+
+on:
+  push:
+    tags:
+      - 'flitiq-mcp-*'
+  workflow_dispatch:
+
+permissions:
+  contents: write  # required to create a GitHub Release + upload assets
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify version sync
+        # Make sure package.json, manifest.json, and src/index.ts all
+        # agree before we pack. The tag's SemVer should match too.
+        run: |
+          PKG_VER=$(node -p "require('./package.json').version")
+          MAN_VER=$(node -p "require('./manifest.json').version")
+          SRC_VER=$(grep -oE 'SERVER_VERSION = "[^"]+"' src/index.ts | sed -E 's/.*"([^"]+)".*/\1/')
+          echo "package.json: $PKG_VER"
+          echo "manifest.json: $MAN_VER"
+          echo "src/index.ts: $SRC_VER"
+          if [ "$PKG_VER" != "$MAN_VER" ] || [ "$PKG_VER" != "$SRC_VER" ]; then
+            echo "::error::Version mismatch -- $PKG_VER vs $MAN_VER vs $SRC_VER"
+            exit 1
+          fi
+          if [ -n "${GITHUB_REF_NAME:-}" ] && [[ "$GITHUB_REF_NAME" == flitiq-mcp-* ]]; then
+            TAG_VER="${GITHUB_REF_NAME#flitiq-mcp-}"
+            if [ "$PKG_VER" != "$TAG_VER" ]; then
+              echo "::error::Tag $GITHUB_REF_NAME does not match package version $PKG_VER"
+              exit 1
+            fi
+          fi
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Install mcpb CLI
+        run: npm install -g @anthropic-ai/mcpb
+
+      - name: Pack .mcpb
+        # Filename includes the version per the setup guide so downloads
+        # are self-describing.
+        run: |
+          PKG_VER=$(node -p "require('./package.json').version")
+          mcpb pack . "flitiq-mcp-${PKG_VER}.mcpb"
+          ls -la *.mcpb
+
+      - name: Upload to GitHub Release
+        # Only runs on tag pushes -- manual dispatches just produce the
+        # .mcpb as a workflow artifact via the previous step (use Actions
+        # tab -> artifacts to download for testing).
+        if: startsWith(github.ref, 'refs/tags/flitiq-mcp-')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PKG_VER=$(node -p "require('./package.json').version")
+          # Create the release if it doesn't exist; otherwise upload to it.
+          if ! gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release create "${GITHUB_REF_NAME}" \
+              --title "FlitIQ MCP ${PKG_VER}" \
+              --notes "See CHANGELOG / commit history for changes."
+          fi
+          gh release upload "${GITHUB_REF_NAME}" "flitiq-mcp-${PKG_VER}.mcpb" --clobber
+
+      - name: Upload as workflow artifact (manual dispatch only)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: flitiq-mcp
+          path: '*.mcpb'
+          retention-days: 30
